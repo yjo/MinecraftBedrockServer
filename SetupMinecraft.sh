@@ -48,7 +48,7 @@ function read_with_prompt {
 
 Update_Scripts() {
   # Remove existing scripts
-  rm -f start.sh stop.sh restart.sh fixpermissions.sh revert.sh
+  rm -f start.sh stop.sh restart.sh revert.sh
 
   # Download start.sh from repository
   echo "Grabbing start.sh from repository..."
@@ -76,15 +76,6 @@ Update_Scripts() {
   sed -i "s:servername:$ServerName:g" restart.sh
   sed -i "s:userxname:$UserName:g" restart.sh
   sed -i "s<pathvariable<$PATH<g" restart.sh
-
-  # Download fixpermissions.sh from repository
-  echo "Grabbing fixpermissions.sh from repository..."
-  curl -H "Accept-Encoding: identity" -L -o fixpermissions.sh https://raw.githubusercontent.com/yjo/MinecraftBedrockServer/master/fixpermissions.sh
-  chmod +x fixpermissions.sh
-  sed -i "s:dirname:$DirName:g" fixpermissions.sh
-  sed -i "s:servername:$ServerName:g" fixpermissions.sh
-  sed -i "s:userxname:$UserName:g" fixpermissions.sh
-  sed -i "s<pathvariable<$PATH<g" fixpermissions.sh
 
   # Download revert.sh from repository
   echo "Grabbing revert.sh from repository..."
@@ -147,11 +138,6 @@ Update_Service() {
       echo "Daily restart scheduled.  To change time or remove automatic restart type crontab -e"
     fi
   fi
-}
-
-Fix_Permissions() {
-  echo "Setting server file permissions..."
-  sudo ./fixpermissions.sh -a >/dev/null
 }
 
 Check_Dependencies() {
@@ -233,7 +219,7 @@ Update_Server() {
 
 Update_Sudoers() {
   if [ -d /etc/sudoers.d ]; then
-    sudoline="$UserName ALL=(ALL) NOPASSWD: /bin/bash $DirName/minecraftbe/$ServerName/fixpermissions.sh -a, /bin/systemctl start $ServerName, /bin/bash $DirName/minecraftbe/$ServerName/start.sh"
+    sudoline="$UserName ALL=(ALL) NOPASSWD: /bin/systemctl start $ServerName, /bin/bash $DirName/minecraftbe/$ServerName/start.sh"
     if [ -e /etc/sudoers.d/minecraftbe ]; then
       AddLine=$(sudo grep -qxF "$sudoline" /etc/sudoers.d/minecraftbe || echo "$sudoline" | sudo tee -a /etc/sudoers.d/minecraftbe)
     else
@@ -318,9 +304,6 @@ if [ -d "$ServerName" ]; then
   # Sudoers configuration
   Update_Sudoers
 
-  # Fix server files/folders permissions
-  Fix_Permissions
-
   # Setup completed
   echo "Setup is complete.  Starting Minecraft $ServerName server.  To view the console use the command screen -r or check the logs folder if the server fails to start"
   sudo systemctl daemon-reload
@@ -350,9 +333,6 @@ Update_Service
 
 # Sudoers configuration
 Update_Sudoers
-
-# Fix server files/folders permissions
-Fix_Permissions
 
 # Finished!
 echo "Setup is complete.  Starting Minecraft server. To view the console use the command screen -r or check the logs folder if the server fails to start."
